@@ -14,5 +14,7 @@ struct string_list {
 	struct string_list *next;
 };
 
+typedef struct string_list string_list;
+
 
 #endif /* LINKED_LIST_H_ */
