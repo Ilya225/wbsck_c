@@ -28,23 +28,27 @@ enum http_headers_parsing_state parse_request(char *request_buffer, int size) {
 	int i = 0 ,str_begin = 0;
 	char *p = request_buffer;
 
-	string_list next_line = headers;
+	string_list *next_line = &headers;
 
 	set_initial_state();
 	while (i < size) {
 		set_input(p[i]);
 		if (state == END_OF_LINE) {
 			int line_size = i - 1 - str_begin;
-			next_line.string = (char*) malloc(line_size * sizeof(char));
-			memcpy(next_line.string, &(p[i - 1 - line_size]), line_size);
-			next_line = *next_line.next;
+			next_line->string = (char*) malloc(line_size * sizeof(char));
+			memcpy(next_line->string, &(p[i - 1 - line_size]), line_size);
+			next_line->next = malloc(sizeof(string_list));
+			next_line = next_line->next;
+			str_begin = i;
 		} else if (state == END_OF_HEADERS) {
 			return END_OF_HEADERS;
 		}
 		i++;
 	}
 
-	return NOT_MATCH;
+	state = NOT_MATCH;
+
+	return state;
 }
 
 void set_input(char input) {
@@ -57,7 +61,7 @@ void set_input(char input) {
 		break;
 	case CR:
 		if (input == '\n') {
-			state = END_OF_LINE;
+			state = CRLF;
 		}
 		break;
 	case CRLF:
@@ -72,6 +76,8 @@ void set_input(char input) {
 			state = END_OF_HEADERS;
 		}
 		break;
+	case END_OF_LINE:
+		state = INIT;
 	default:
 		break;
 	}
